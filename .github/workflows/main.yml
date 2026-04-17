@@ -3,17 +3,21 @@ name: Steam Check
 on:
   schedule:
     - cron: '0 * * * *' # Запуск каждый час
-  workflow_dispatch: # Позволяет запускать вручную кнопкой
+  workflow_dispatch:      # Позволяет запускать вручную кнопкой
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Даем права на запись контента (чтобы бот мог сохранять json)
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Обновлено с v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Обновлено с v4
         with:
           python-version: '3.9'
 
@@ -23,10 +27,11 @@ jobs:
       - name: Run script
         run: python bot.py
 
-      - name: Commit changes # Сохраняем историю цен обратно в GitHub
+      - name: Commit and Push changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add db_prices.json
-          git commit -m "Update prices" || echo "No changes to commit"
+          # Если изменений нет, скрипт не упадет с ошибкой
+          git commit -m "Update price history [skip ci]" || echo "No changes to commit"
           git push
